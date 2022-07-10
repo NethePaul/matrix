@@ -12,5 +12,6 @@ public:
 	void draw(ID2D1RenderTarget*pRT, ID2D1Brush*brush)const override;
 	void update()override;
 	void shoot()override;
+	Object*clone()const override { return new Jet(*this); }
 };
 

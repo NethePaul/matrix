@@ -2,6 +2,17 @@
 #include<assert.h>
 using namespace D2D1;
 
+void Message::set_text_(const std::wstring&str)
+{
+	SafeRelease(&text_layout);
+	wf->CreateTextLayout(txt.c_str(), txt.length(), text_format, m_size.width*.9, m_size.height*.9, &text_layout);
+	DWRITE_TRIMMING dwt{};
+	dwt.granularity =
+		DWRITE_TRIMMING_GRANULARITY::DWRITE_TRIMMING_GRANULARITY_CHARACTER;
+	if (text_layout)text_layout->SetTrimming(&dwt, 0);
+	RedrawWindow(m_hwnd, 0, 0, RDW_INVALIDATE);
+}
+
 Message::~Message()
 {
 	SafeRelease(&r);
@@ -73,32 +84,34 @@ void Message::set_color(D2D1::ColorF txt, D2D1::ColorF bck)
 	bck_color=bck;
 }
 
-void Message::set_text(std::wstring txt)
+void Message::set_text(const std::wstring&txt)
 {
 	this->txt = txt;
-	SafeRelease(&text_layout);
-	wf->CreateTextLayout(txt.c_str(), txt.length(), text_format, m_size.width*.9, m_size.height*.9, &text_layout);
-	DWRITE_TRIMMING dwt{};
-	dwt.granularity =
-		DWRITE_TRIMMING_GRANULARITY::DWRITE_TRIMMING_GRANULARITY_CHARACTER;
-	if (text_layout)text_layout->SetTrimming(&dwt, 0);
-	RedrawWindow(m_hwnd, 0, 0, RDW_INVALIDATE);
+	advanced = 0;
+	set_text_(txt);
+}
+
+void Message::set_auto_destroy(bool p)
+{
+	auto_destroy = p;
 }
 
 LRESULT Message::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	//HWND parent = GetParent(m_hwnd);
-	//auto a = DefWindowProc(m_hwnd, uMsg, wParam, lParam);
 	switch (uMsg) {
 	case WM_LBUTTONUP:
 		if (text_layout) {
 			DWRITE_HIT_TEST_METRICS m{}; BOOL a, b;
 			text_layout->HitTestPoint(text_layout->GetMaxWidth(), text_layout->GetMaxHeight(), &a, &b, &m);
-			if (m.textPosition+1 >= txt.length())DestroyWindow(m_hwnd);
-			else {
-				txt.erase(0, m.textPosition+1);
-				set_text(txt);
+
+			advanced += m.textPosition + 1;
+			if (advanced >= txt.length()) {
+				if (auto_destroy) { DestroyWindow(m_hwnd); break; }
+				else {
+					advanced = 0;
+				}
 			}
+			set_text_(txt.c_str() + advanced);
 		}
 		break;
 	case WM_DESTROY:
@@ -108,9 +121,6 @@ LRESULT Message::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		delete this;
 		return 0;
 	case WM_PAINT:
-		//PostMessage(parent, uMsg, wParam, lParam);
-		
-		//DefWindowProc(m_hwnd, uMsg, wParam, lParam);
 		draw();
 		break;
 	case WM_SIZING:
@@ -118,6 +128,5 @@ LRESULT Message::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		resize();
 		break;
 	}
-	//PostMessage(parent, uMsg, wParam, lParam);
 	return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
 }

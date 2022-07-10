@@ -174,6 +174,16 @@ double Object::get_outer_radius() const
 	return radius;
 }
 
+void Object::set_radius(double r)
+{
+	radius = r;
+}
+
+void Object::set_pos(Comp<double> pos)
+{
+	this->pos = pos;
+}
+
 void Object::set_rotation_acc(double percantage)
 {
 	if (percantage > 100)percantage = 100;

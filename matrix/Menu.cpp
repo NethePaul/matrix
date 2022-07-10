@@ -6,6 +6,7 @@ void Menu::destroy_all()
 		DestroyWindow(sub->get_hwnd());
 	}
 	sub_windows.clear();
+	if (!open)return;
 	open = false;
 	if (close_menu_cb)close_menu_cb();
 }

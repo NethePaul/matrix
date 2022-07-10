@@ -15,6 +15,7 @@ public:
 	Turret(double x,double y,Game*context);
 	void draw(ID2D1RenderTarget*pRT, ID2D1Brush*brush)const override;
 	void update()override;
+	Object*clone()const override { return new Turret(*this); }
 	void shoot()override;
 	void update_shots();
 };

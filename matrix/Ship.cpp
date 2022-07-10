@@ -44,6 +44,16 @@ void Ship::update()
 	}
 }
 
+void Ship::update_outer_radius()
+{
+	double&r = outer_radius;r = radius;
+	for (auto&part : parts) {
+		part->update_outer_radius();
+		double r2 = (part->pos - pos).getD() + part->get_outer_radius();
+		if (r2 > r)r = r2;
+	}
+}
+
 void Ship::be_exploded(Object & by)
 {
 	Object::be_exploded(by);
@@ -85,6 +95,26 @@ void Ship::attach(std::shared_ptr<Object> o)
 	if (nr > outer_radius)outer_radius = nr;
 }
 
+void Ship::detach(std::shared_ptr<Object> o)
+{
+	for (int i = 0; i < parts.size(); i++) {
+		if (parts[i] == o)
+		{
+			auto a = dynamic_cast<Ship*>(&*parts[i]);
+			if (a)a->detach(o);
+			parts.erase(parts.begin() + i--);
+		}
+	}
+}
+
+void Ship::add_connector(std::shared_ptr<Object> obj1, std::shared_ptr<Object> obj2)
+{
+	connector c;
+	c.between[0] = obj1;
+	c.between[1] = obj2;
+	connections.push_back(c);
+}
+
 bool Ship::add_target(std::shared_ptr<Object> t)
 {
 	bool a=Object::add_target(t);
@@ -112,6 +142,20 @@ double Ship::get_outer_radius() const
 	return outer_radius;
 }
 
+void Ship::set_radius(double r)
+{
+	radius = r;
+	if (radius > outer_radius)outer_radius = radius;
+}
+
+void Ship::set_pos(Comp<double> pos)
+{
+	this->pos = pos;
+	for (auto&part : parts) {
+		part->set_pos(pos);
+	}
+}
+
 std::shared_ptr<Object> Ship::highlight(bool set, Comp<double> cpos)
 {
 	if (!set) {
@@ -122,7 +166,7 @@ std::shared_ptr<Object> Ship::highlight(bool set, Comp<double> cpos)
 	}
 	bool a = false;
 	if (controlled)a = true;
-	if (context) {
+	if (context) {//if this is being targeted by the player or if this is the player -> a=true
 		auto c = context->get_controlled();
 		auto c2 = c.lock();
 		if (c2) {

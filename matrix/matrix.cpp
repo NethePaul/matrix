@@ -75,9 +75,30 @@ void Game::update_closest() {
 
 void Game::set_pause(bool p)
 {
-	pause = p;
+	if (p)pause++;
+	else if(pause)pause--;
 }
 
+void Game::unpause() {
+	pause = 0;
+}
+
+void Game::set_no_render_obj(bool p)
+{
+	if (p)no_render_objects++;
+	else if (no_render_objects)no_render_objects--;
+}
+void Game::enable_render_obj() {
+	no_render_objects = 0;
+}
+void Game::set_no_render(bool p)
+{
+	if (p)no_render++;
+	else if (no_render)no_render--;
+}
+void Game::enable_render() {
+	no_render = 0;
+}
 void Game::update()
 {
 	if (pause)return;
@@ -100,18 +121,23 @@ void Game::init(ID2D1RenderTarget *pRT, ID2D1Factory* f,HWND hwnd)
  
 void Game::draw(ID2D1RenderTarget *pRT, D2D1_SIZE_F size)
 {
+	
 	D2D1_MATRIX_3X2_F&m=zoom;
 	pRT->GetTransform(&m);
 	pRT->FillRectangle(D2D1::RectF(0, 0, WIDTH, HEIGHT), gis.clear_color);
 	
 	auto fp = focus_point.lock();
+	if (constructor)fp = controlled.lock();
 	if(fp)
-		pRT->SetTransform(D2D1::Matrix3x2F::Translation(-fp->pos.x + WIDTH / 2, -fp->pos.y + HEIGHT / 2)*m);
+		pRT->SetTransform(D2D1::Matrix3x2F::Translation(-fp->pos.x + (WIDTH-(constructor?600:0)) / 2, -fp->pos.y + HEIGHT / 2)*m);
 	pRT->GetTransform(&last);
-	stars.draw(pRT);
-	for (const auto&obj : objects)
-		obj->draw_full(pRT, gis.Yellow);
-	
+	if (constructor)constructor->draw(pRT);
+	else if (!no_render) {
+		stars.draw(pRT);
+		if (!no_render_objects)
+			for (const auto&obj : objects)
+				obj->draw_full(pRT, gis.Yellow);
+	}
 	pRT->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(), 100, 100), gis.Red);
 	pRT->SetTransform(&m);
 
@@ -120,6 +146,7 @@ void Game::draw(ID2D1RenderTarget *pRT, D2D1_SIZE_F size)
 
 void Game::input(UINT umsg, POINT cp, WPARAM wParam, LPARAM lParam, int scroll)
 {
+	if (constructor) { constructor->input(umsg, cp, wParam, lParam, scroll,main); return; }
 	this->cp = cp;
 	auto player = controlled.lock();
 	double pm = 1;
@@ -167,11 +194,26 @@ void Game::input(UINT umsg, POINT cp, WPARAM wParam, LPARAM lParam, int scroll)
 				menu = std::make_shared<Menu>(main, factory, zoom);
 			menu->close_cb = []() {PostQuitMessage(0); };
 			menu->close_menu_cb = [this]() {set_pause(false); menu = 0; };
+			menu->edit_ship_cb = [this]() {
+				constructor = std::make_shared<Constructor>(Constructor(last,this));
+				if (!*constructor) {
+					auto m = msg(WIDTH / 2 - 200, HEIGHT*.8, 400, HEIGHT*.1, 2, L"Error: cannot edit this\n press to continue");
+					set_pause(true);
+					m->set_color(D2D1::ColorF::Red, D2D1::ColorF(.1, .1, .1));
+					m->on_destruction = [this]() {set_pause(false); };
+					constructor = 0;
+				}
+				else {
+					set_pause(true);
+					set_no_render_obj(true);
+					constructor->on_finish = [this]() {set_pause(false); set_no_render_obj(false); constructor = 0; };
+				}
+			};
 			set_pause(true);
 		}
 		break;
 	case WM_MOUSEMOVE:
-		update_closest();
+		if(!constructor&&!menu)update_closest();
 		break;
 	case WM_LBUTTONDOWN:
 		static_camera = std::make_shared<Object>();

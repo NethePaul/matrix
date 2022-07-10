@@ -99,6 +99,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
 		delta_buffer = 0;
 	input:

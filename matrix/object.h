@@ -60,6 +60,10 @@ public:
 	virtual const std::vector<std::shared_ptr<Object>>&get_sub_objects()const;
 	virtual explicit operator bool()const;
 	virtual double get_outer_radius()const;
+	virtual void set_radius(double r);
+	virtual void set_pos(Comp<double>pos);
+	virtual Object*clone()const {return new Object(*this);}
+	virtual void update_outer_radius() {};
 	/**
 	*@param percantage between -100 and 100
 	*/
