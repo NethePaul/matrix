@@ -7,7 +7,7 @@ class Message :
 protected:
 	ID2D1HwndRenderTarget*r=0;
 	D2D1_SIZE_F m_size;
-	double x, y; int rows; int advanced = 0;
+	int rows; int advanced = 0;
 	std::wstring txt;
 	ID2D1SolidColorBrush*text_color;
 	D2D1::ColorF bck_color;

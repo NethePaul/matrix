@@ -22,14 +22,14 @@ Message::~Message()
 	SafeRelease(&text_layout);
 }
 
-Message::Message(HWND parent, ID2D1Factory * f, int x,int y,int w, int h, int rows) : x(x),y(y),rows(rows),f(f),text_format(0),text_layout(0),bck_color(0,0,0)
+Message::Message(HWND parent, ID2D1Factory * f, int x,int y,int w, int h, int rows) :rows(rows),f(f),text_format(0),text_layout(0),bck_color(0,0,0)
 {
 	Create(L"message_box", WS_CHILD|WS_CLIPCHILDREN|WS_CLIPSIBLINGS,WS_EX_RIGHTSCROLLBAR,parent,x,y,w,h);
 	ShowWindow(m_hwnd, SW_SHOW); UpdateWindow(m_hwnd);
 	//SetWindowPos(m_hwnd, HWND_TOP, 10, 10, 100, 100, SWP_SHOWWINDOW);
 	auto hr=f->CreateHwndRenderTarget(
 		D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_SOFTWARE),
-		D2D1::HwndRenderTargetProperties(m_hwnd,D2D1::SizeU(100,100)),
+		D2D1::HwndRenderTargetProperties(m_hwnd,D2D1::SizeU(w,h)),
 		&r
 	);
 	assert(SUCCEEDED(hr));
