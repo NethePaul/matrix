@@ -20,6 +20,7 @@ public:
 	void set_color(D2D1::ColorF sc, D2D1::ColorF held, D2D1::ColorF sc_hover, D2D1::ColorF bck);
 	void draw();
 	void set_state(double state);//between 0 and 1
+	void resize();
 	LPCWSTR ClassName()const override{ return L"Slider_52784128"; };
 	LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)override;
 };

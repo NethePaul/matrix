@@ -1,5 +1,6 @@
 #include "slider.h"
 #include<assert.h>
+#include<algorithm>
 
 Slider::Slider(HWND parent,ID2D1Factory*f,double x,double y, double w, double h, const std::function<void(double state)>& on_update)
 	:on_update(on_update),
@@ -18,7 +19,8 @@ Slider::Slider(HWND parent,ID2D1Factory*f,double x,double y, double w, double h,
 	));
 	assert2(r->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::LightGray),&sc));
 	assert2(r->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::DarkGray), &sc_hover));
-	assert2(r->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Aqua), &sc_held));
+	assert2(r->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Azure), &sc_held));
+	resize();
 }
 
 Slider::~Slider()
@@ -37,7 +39,9 @@ void Slider::set_color(D2D1::ColorF sc, D2D1::ColorF held, D2D1::ColorF sc_hover
 
 void Slider::draw()
 {
+	if (!r)return;
 	r->BeginDraw();
+	r->Clear(bck_color);
 	r->FillRoundedRectangle(D2D1::RoundedRect(
 		D2D1::RectF(m_size.width*.1, m_size.height*.4, m_size.width*.9, m_size.height*.6),
 		m_size.height*.04, m_size.height*.04),//rx,ry
@@ -48,7 +52,9 @@ void Slider::draw()
 	case mouse_state::holding:b = sc_held; break;
 	case mouse_state::hovering:b = sc_hover; break;
 	};
-	r->FillEllipse(D2D1::Ellipse(D2D1::Point2F(m_size.width*state, m_size.height*.5), m_size.height*.5, m_size.height*.5), b);
+#undef min
+	auto ra = std::min<double>(m_size.height*.5, m_size.width*.1);
+	r->FillEllipse(D2D1::Ellipse(D2D1::Point2F(m_size.width*(state*.8+.1), m_size.height*.5),ra, ra), b);
 	r->EndDraw();
 }
 
@@ -61,6 +67,20 @@ void Slider::set_state(double state)
 	this->state = state;
 }
 
+void Slider::resize()
+{
+	if (r) {
+		RECT rc;
+		GetClientRect(m_hwnd, &rc);
+
+		m_size = D2D1::SizeF(rc.right, rc.bottom);
+		D2D1_SIZE_U sizeu = D2D1::SizeU(rc.right, rc.bottom);
+		r->Resize(sizeu);
+
+	}
+	RedrawWindow(m_hwnd, 0, 0, RDW_INVALIDATE);
+}
+
 LRESULT Slider::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	POINT cp;
@@ -68,11 +88,15 @@ LRESULT Slider::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_NCDESTROY:delete this; return 0;
 	case WM_PAINT:draw(); return 0;
+	case WM_SIZE:
+	case WM_SIZING:
+		resize();
+		break;
 	case WM_LBUTTONDOWN:
 		if (ms==mouse_state::hovering) {
 			SetCapture(m_hwnd);
 			GetCursorPos(&cp); ScreenToClient(m_hwnd, &cp);
-			state = cp.x / m_size.width;
+			state = (cp.x / m_size.width - .1) / .8;
 			if (state > 1)state = 1;
 			if (state < 0)state = 0;
 			ms = mouse_state::holding;
@@ -83,7 +107,7 @@ LRESULT Slider::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		if (ms == mouse_state::holding) {
 			GetCursorPos(&cp); ScreenToClient(m_hwnd, &cp);
-			state = cp.x / m_size.width;
+			state = (cp.x / m_size.width - .1) / .8;
 			if (state > 1)state = 1;
 			if (state < 0)state = 0;
 		}
