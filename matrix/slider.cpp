@@ -99,6 +99,7 @@ LRESULT Slider::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			state = (cp.x / m_size.width - .1) / .8;
 			if (state > 1)state = 1;
 			if (state < 0)state = 0;
+			if (on_update)on_update(state);
 			ms = mouse_state::holding;
 		}
 		return 0;
@@ -110,6 +111,7 @@ LRESULT Slider::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			state = (cp.x / m_size.width - .1) / .8;
 			if (state > 1)state = 1;
 			if (state < 0)state = 0;
+			if (on_update)on_update(state);
 		}
 		else if (GetCapture() != m_hwnd)
 		{

@@ -23,6 +23,7 @@ public:
 	Message(HWND parent, ID2D1Factory*f, int x, int y, int w, int h, int r);
 
 	void draw();
+	virtual void mid_draw() {};
 	void resize();
 	void calculate_layout();
 	void set_color(D2D1::ColorF txt, D2D1::ColorF bck);

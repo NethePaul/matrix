@@ -54,6 +54,7 @@ void Message::draw()
 
 	);*/
 	r->DrawTextLayout(D2D1::Point2F(m_size.width*0.05, m_size.height*0.05), text_layout, text_color);
+	mid_draw();
 	r->EndDraw();
 }
 
