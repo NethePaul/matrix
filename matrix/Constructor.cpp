@@ -119,8 +119,14 @@ void Constructor::input(UINT msg, POINT cp, WPARAM wParam, LPARAM lParam, int sc
 				selected_l = std::shared_ptr<Object>(closest.lock()->clone());
 				if (working_on)working_on->attach(selected_l);
 			}
-			else selected_l = closest.lock();//already attached, on reposition and reconfigure
-			selected_l->set_pos(get_cp2(last_inverted, cp));
+			else {
+				selected_l = closest.lock();//already attached, on reposition and reconfigure
+				if (selected_l == working_on_) {
+					selected_l = 0;
+					SetCapture(0);
+				}
+			}
+			if(selected_l)selected_l->set_pos(get_cp2(last_inverted, cp));
 		}		
 		break;
 	case WM_LBUTTONUP:

@@ -22,14 +22,11 @@ void Ship::draw_explosion(ID2D1RenderTarget *r, ID2D1Brush *b) const
 
 void Ship::update()
 {
-	auto pb = pos;
-	auto rb = rotation;
-	Object::update();
 	bool need_to_delete_one = false;
 	for (auto&part : parts) {
-		part->pos += pos - pb;
-		part->mov = 0;
-		part->pos = D2D1::Matrix3x2F::Rotation((rotation - rb) * 180 / PI, D2D1::Point2F(pos.x, pos.y)).TransformPoint(D2D1::Point2F(part->pos.x, part->pos.y));
+		part->mov = mov;
+		part->acc = acc;
+		part->friction = friction;
 		part->update();
 		if (!(part->health>0))
 			need_to_delete_one = true;
@@ -38,8 +35,11 @@ void Ship::update()
 		for (int i = 0; i < parts.size(); i++)
 			if (!(parts[i]->health>0))
 				parts.erase(parts.begin() + i--);
-	
+	auto pb = pos;
+	auto rb = rotation;
+	Object::update();
 	for (auto&part : parts) {
+		part->pos = D2D1::Matrix3x2F::Rotation((rotation - rb) * 180 / PI, D2D1::Point2F(pos.x, pos.y)).TransformPoint(D2D1::Point2F(part->pos.x, part->pos.y));
 		part->rotation += rotation - rb;
 	}
 }

@@ -33,6 +33,7 @@ void Jet::shoot()
 	b.friction = 1.003;
 	b.acc = 0;
 	b.set_mov(20);
+	b.mov += mov;
 	b.radius = 4;
 	b.target = target;
 	b.explosion_damage = 10;
