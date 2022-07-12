@@ -36,6 +36,7 @@ Message::Message(HWND parent, ID2D1Factory * f, int x,int y,int w, int h, int ro
 	hr=r->CreateSolidColorBrush(ColorF(ColorF::LightGray),&text_color);
 	assert(SUCCEEDED(hr));
 	resize();
+	set_text(L"");
 }
 
 void Message::draw()

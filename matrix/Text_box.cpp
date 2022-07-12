@@ -31,6 +31,9 @@ LRESULT Text_box::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 #define update set_text_(txt);if(on_update)on_update(txt);
 	switch (uMsg)
 	{
+	case WM_DESTROY:
+		KillTimer(m_hwnd, 1);
+		break;
 	case WM_TIMER:
 		if (GetFocus() != m_hwnd) { KillTimer(m_hwnd, 1); render_cursor = 0; }
 		else render_cursor = !render_cursor;
@@ -94,8 +97,6 @@ LRESULT Text_box::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			render_cursor = false;
 		}
 		return 0;
-	default:
-		break;
 	}
 	return Message::HandleMessage(uMsg,wParam,lParam);
 }

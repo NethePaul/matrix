@@ -167,6 +167,7 @@
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="Message.cpp" />
     <ClCompile Include="object.cpp" />
+    <ClCompile Include="Scrollable.cpp" />
     <ClCompile Include="Ship.cpp" />
     <ClCompile Include="slider.cpp" />
     <ClCompile Include="Stars.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="Menu.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="object.h" />
+    <ClInclude Include="Scrollable.h" />
     <ClInclude Include="Ship.h" />
     <ClInclude Include="slider.h" />
     <ClInclude Include="Stars.h" />
