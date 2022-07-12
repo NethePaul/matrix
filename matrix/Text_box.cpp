@@ -61,9 +61,9 @@ LRESULT Text_box::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			break;
-		case VK_ESCAPE:SetFocus(0); if (on_escape) on_escape(txt); render_cursor = 0; RedrawWindow(m_hwnd, 0, 0, RDW_INVALIDATE);
+		case VK_ESCAPE:SetFocus(focus_owner); if (on_escape) on_escape(txt); render_cursor = 0; RedrawWindow(m_hwnd, 0, 0, RDW_INVALIDATE);
 			break;
-		case VK_RETURN:SetFocus(0);if(on_enter) on_enter(txt); render_cursor = 0; RedrawWindow(m_hwnd, 0, 0, RDW_INVALIDATE);
+		case VK_RETURN:SetFocus(focus_owner);if(on_enter) on_enter(txt); render_cursor = 0; RedrawWindow(m_hwnd, 0, 0, RDW_INVALIDATE);
 			break;
 		case VK_LEFT:
 			if (cpos)cpos--;
@@ -78,7 +78,7 @@ LRESULT Text_box::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;
 	case WM_LBUTTONDOWN:
-		SetFocus(m_hwnd);
+		focus_owner=SetFocus(m_hwnd);
 		SetTimer(m_hwnd, 1, 1000, 0);
 		if (text_layout) {
 			DWRITE_HIT_TEST_METRICS m{}; BOOL trailing, inside;

@@ -30,6 +30,7 @@ public:
 	double get_outer_radius()const override;
 	void set_radius(double r)override;
 	void set_pos(Comp<double>pos)override;
+	void rotate(double x)override;
 	std::shared_ptr<Object> highlight(bool set, Comp<double>cpos);
 
 	const std::vector<std::shared_ptr<Object>>&get_sub_objects()const override;

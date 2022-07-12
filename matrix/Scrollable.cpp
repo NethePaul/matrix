@@ -105,10 +105,10 @@ void Scrollable::set_scrollbar_color(D2D1::ColorF bck, D2D1::ColorF color, D2D1:
 void Scrollable::update()
 {
 	double min_h2 = (m_size.height - sb_height)*scroll_state;
-	double d = min_h2 - min_h;
+	LONG d = min_h2 - min_h;
 	min_h = min_h2;
 	struct a {
-		double d;
+		LONG d;
 		Scrollable*t;
 	}p{d,this};
 	WNDENUMPROC f = [](HWND hwnd, LPARAM p) {

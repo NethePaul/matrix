@@ -195,7 +195,7 @@ void Game::input(UINT umsg, POINT cp, WPARAM wParam, LPARAM lParam, int scroll)
 			menu->close_cb = []() {PostQuitMessage(0); };
 			menu->close_menu_cb = [this]() {set_pause(false); menu = 0; };
 			menu->edit_ship_cb = [this]() {
-				constructor = std::make_shared<Constructor>(Constructor(last,this));
+				constructor = std::make_shared<Constructor>(Constructor(main,factory,last,zoom,this));
 				if (!*constructor) {
 					auto m = msg(WIDTH / 2 - 200, HEIGHT*.8, 400, HEIGHT*.1, 2, L"Error: cannot edit this\n press to continue");
 					set_pause(true);

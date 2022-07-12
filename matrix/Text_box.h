@@ -6,6 +6,7 @@ class Text_box :
 	int cpos = 0;
 	bool render_cursor = 0;
 	ID2D1SolidColorBrush*cursor;
+	HWND focus_owner = 0;
 public:
 	std::function<void(const std::wstring&in)>on_enter;
 	std::function<void(const std::wstring&in)>on_update;

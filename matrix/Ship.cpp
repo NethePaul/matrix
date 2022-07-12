@@ -150,10 +150,18 @@ void Ship::set_radius(double r)
 
 void Ship::set_pos(Comp<double> pos)
 {
+	auto p = pos-this->pos;
 	this->pos = pos;
 	for (auto&part : parts) {
-		part->set_pos(pos);
+		part->set_pos(part->pos+p);
 	}
+}
+
+void Ship::rotate(double x)
+{
+	Object::rotate(x);
+	for (auto&part : parts)
+		part->rotate(x);
 }
 
 std::shared_ptr<Object> Ship::highlight(bool set, Comp<double> cpos)

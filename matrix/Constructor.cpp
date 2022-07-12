@@ -3,12 +3,22 @@
 #include"object.h"
 #include"jet.h"
 #include"matrix.h"
+#include"Scrollable.h"
 
 Comp<double> get_cp2(D2D1::Matrix3x2F&m, POINT&cp) {
 	auto pos = m.TransformPoint(D2D1::Point2F(cp.x, cp.y));
 	return pos;
 }
-Constructor::Constructor(D2D1::Matrix3x2F&last, Game * context):context(context),working_on_(0),last(last)
+void Constructor::set_selected_last()
+{
+	selected_last = selected_l;
+	if (menu)
+		DestroyWindow(menu->get_hwnd());
+	auto sl = selected_last.lock();
+	if (sl)
+		menu=sl->details(main, f, zoom, 1000, HEIGHT / 2.0, 600, HEIGHT / 3.0, working_on->pos);
+}
+Constructor::Constructor(HWND main, ID2D1Factory*f,D2D1::Matrix3x2F&last, D2D1::Matrix3x2F&zoom, Game * context):context(context),working_on_(0),last(last),zoom(zoom),main(main),f(f)
 {
 	//last.Invert();
 	//auto min = last.TransformPoint(D2D1::Point2F(0, 0));
@@ -34,6 +44,8 @@ Constructor::~Constructor()
 	c = constructee_selected.lock();
 	if (c)c->controlled = 0;
 	if (working_on)working_on->controlled = true;
+	if (menu)
+		DestroyWindow(menu->get_hwnd());
 }
 
 bool Constructor::set_working_on(std::shared_ptr<Object> obj)
@@ -61,6 +73,8 @@ void Constructor::draw(ID2D1RenderTarget *r)
 		auto p = get_cp2(last_inverted, cp);
 		r->DrawLine(D2D1::Point2F(sr->pos.x, sr->pos.y), D2D1::Point2F(p.x, p.y), gis.Green, 5);
 	}
+	auto sl = selected_last.lock();
+	if (sl) { sl->draw(r,gis.Blue); }
 	draw_selection(r);
 }
 
@@ -105,12 +119,20 @@ void Constructor::input(UINT msg, POINT cp, WPARAM wParam, LPARAM lParam, int sc
 		}
 		if (k(VK_BACK) && player&&player != working_on_&&working_on) {
 			working_on->detach(player);
+			auto sl = selected_last.lock();
+			if (player == sl)
+			{
+				selected_l = 0;
+				set_selected_last();
+			}
 		}
 
 		if (k(VK_ESCAPE))
 			on_finish();
 		break;
 	case WM_LBUTTONDOWN:
+		selected_l = 0;
+		set_selected_last();
 		if (GetCapture() != main) {
 			SetCapture(main);
 			update_closest();
@@ -135,7 +157,8 @@ void Constructor::input(UINT msg, POINT cp, WPARAM wParam, LPARAM lParam, int sc
 			auto p = get_cp2(selectable_inverted, cp);
 			if (p.x >= 1000) {
 				if (working_on)working_on->detach(selected_l);
-			}selected_l = 0;
+				selected_l = 0;
+			}set_selected_last(); selected_l = 0;
 			if (working_on)working_on->update_outer_radius();
 		}
 		break;

@@ -1,5 +1,9 @@
 #include "object.h"
 #include"matrix.h"
+#include"Scrollable.h"
+#include"Text_box.h"
+#include"slider.h"
+#include<sstream>
 
 Object::Object(Game*context)
 :pos(0,0)
@@ -182,6 +186,77 @@ void Object::set_radius(double r)
 void Object::set_pos(Comp<double> pos)
 {
 	this->pos = pos;
+}
+
+void Object::rotate(double x)
+{
+	rotation += x;
+}
+
+Scrollable * Object::details(HWND parent, ID2D1Factory * f, D2D1::Matrix3x2F zoom,double x,double y,double w,double h, Comp<double>relative_pos)
+{
+	auto p = zoom.TransformPoint({ (FLOAT)x,(FLOAT)y });
+	auto p2= zoom.TransformPoint({ (FLOAT)x+ (FLOAT)w,(FLOAT)y+ (FLOAT)h });
+	auto d = D2D1::Point2F(p2.x - p.x, p2.y - p.y); 
+	double necessary_size=p.x*2;
+	auto a = new Scrollable(parent, f, p.x, p.y, d.x, d.y, necessary_size);
+	d.x *= .9;
+	parent = a->get_hwnd();
+	Text_box*b;
+	Message*m;
+#define setting_pair_tb(y_,a_,v_)\
+	m = new Message(parent, f, d.x/2 , y_, d.x / 2, d.y*.3, 2);\
+	m->set_auto_destroy(false); m->set_text(L##a_);\
+	b = new Text_box(parent, f, 0, y_, d.x / 2, d.y*.3, 2);\
+	b->set_text(std::to_wstring(v_));\
+	
+	setting_pair_tb(0, "position x", pos.x-relative_pos.x);
+	b->on_enter = [this,relative_pos](const std::wstring&s) {
+		std::wstringstream ss(s);
+		double d = 0;
+		ss >> d;
+		if (d < 0)d = 0;
+		if (d > 500)d = 500;
+		if (ss.eof() && !ss.fail()) set_pos(relative_pos + d + Comp<double>(.0,pos.y-relative_pos.y));
+	};
+	setting_pair_tb(d.y*.3, "position y", pos.y - relative_pos.y);
+	b->on_enter = [this, relative_pos](const std::wstring&s) {
+		std::wstringstream ss(s);
+		double d = 0;
+		ss >> d;
+		if (d < 0)d = 0;
+		if (d > 450)d = 450;
+		if (ss.eof() && !ss.fail()) set_pos(relative_pos + Comp<double>(.0,d)+pos.x-relative_pos.x);
+	}; setting_pair_tb(d.y * .6, "rotation", rotation*180/PI);
+	b->on_enter = [this, relative_pos](const std::wstring&s) {
+		std::wstringstream ss(s);
+		double d = 0;
+		ss >> d;
+		d /= 180; d *= PI;
+		if (ss.eof() && !ss.fail()) rotate(d-rotation);
+	}; setting_pair_tb(d.y * .9, "radius", radius);
+	b->on_enter = [this, relative_pos](const std::wstring&s) {
+		std::wstringstream ss(s);
+		double d = 0;
+		ss >> d;
+		if (ss.eof() && !ss.fail()) set_radius(d);
+	};
+	setting_pair_tb(d.y * 1.2, "max acceleration", max_acc);
+	b->on_enter = [this, relative_pos](const std::wstring&s) {
+		std::wstringstream ss(s);
+		double d = 0;
+		ss >> d;
+		if (ss.eof() && !ss.fail()) max_acc=d;
+	}; setting_pair_tb(d.y * 1.5, "max rotation acceleration", max_rotation_acc);
+	b->on_enter = [this, relative_pos](const std::wstring&s) {
+		std::wstringstream ss(s);
+		double d = 0;
+		ss >> d;
+		if (ss.eof() && !ss.fail()) max_rotation_acc=d;
+	};
+
+
+	return a;
 }
 
 void Object::set_rotation_acc(double percantage)
