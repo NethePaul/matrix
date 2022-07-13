@@ -5,6 +5,10 @@
 #include"slider.h"
 #include<sstream>
 
+double get_max_speed(double acc, double fric) {
+	return acc * fric / (fric - 1);
+}
+
 Object::Object(Game*context)
 :pos(0,0)
 ,mov(0,0)
@@ -15,8 +19,8 @@ Object::Object(Game*context)
 ,rotation(0)
 ,rotation_speed(0)
 ,rotation_acc(0)
-,rotation_friction(1.2)
-,max_rotation_acc(0.04)
+,rotation_friction(1.3)
+,max_rotation_acc(0.03)
 ,acc_percent(0)
 ,radius(10)
 ,context(context)
@@ -138,20 +142,25 @@ bool Object::add_rm_target(std::shared_ptr<Object> t)
 		return false;
 	}
 	//if it is a secondary target, set it to main target
-	for (int i = 1; i < target.size(); i++)
-		if (target[i].lock() == t) {
-			std::swap(target[0], target[i]);
-			goto already_targeted;
+	std::shared_ptr<Object>main_target;
+	for (int i = 1; i < target.size(); i++) {
+		auto t2 = target[i].lock();
+		if (t2 == t) {
+			main_target = t2;
+			target.erase(target.begin()+i);
+			break;
 		}
+	}
 
 	//add target
+	if(!main_target)
 	target.push_back(t);
 
-already_targeted:
 	auto&a = t->get_sub_objects();
 	for (auto&sub : a) {
 		add_target(sub);
 	}
+	if (main_target)target.insert(target.begin(), main_target);
 	return true;
 }
 
@@ -257,6 +266,28 @@ Scrollable * Object::details(HWND parent, ID2D1Factory * f, D2D1::Matrix3x2F zoo
 
 
 	return a;
+}
+
+void Object::AI()
+{
+	if (controlled)return;
+	for (auto&wt : target) {
+		auto t = wt.lock(); if (t&&!(t->health<=0)) {
+			auto m = t->pos-pos;
+			if (mov.getD())
+				m /= mov;
+			else
+				m /= CCompbyR(1,rotation);
+			if (m.getD() < (get_outer_radius() + t->get_outer_radius())*1.1)m*CCompbyA(1,1);
+			auto angle=m.getA()/PI*2;
+			angle = pow(angle, 3);
+			set_rotation_acc(angle *100);
+			set_acc(100);
+			shoot();
+			return;
+		}
+	}
+	set_mov(0);
 }
 
 void Object::set_rotation_acc(double percantage)

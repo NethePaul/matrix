@@ -108,7 +108,7 @@ void Game::update()
 	if (notified) {
 		remove_obj();
 		notified = false;
-	}
+	}for (auto obj : objects)obj->AI();
 
 	update_closest();
 }

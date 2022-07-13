@@ -186,7 +186,7 @@ std::shared_ptr<Object> Ship::highlight(bool set, Comp<double> cpos)
 		}
 	}
 	if (!a) Object::highlight(true, cpos);
-	double d = (pos-cpos).getD();
+	double d = min((pos-cpos).getD(),50);
 	std::shared_ptr<Object>o,n;
 	if (a) {
 		for (auto&obj : parts) {

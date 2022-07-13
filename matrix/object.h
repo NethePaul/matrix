@@ -67,9 +67,8 @@ public:
 	virtual Object*clone()const {return new Object(*this);}
 	virtual void update_outer_radius() {};
 	virtual Scrollable*details(HWND parent, ID2D1Factory * f, D2D1::Matrix3x2F zoom, double x, double y, double w, double h, Comp<double>relative_pos = 0);
-	/**
-	*@param percantage between -100 and 100
-	*/
+	virtual void AI();
 	void set_rotation_acc(double percantage);
 };
 
+double get_max_speed(double acc, double fric);

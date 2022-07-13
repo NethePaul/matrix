@@ -11,9 +11,9 @@ public:
 	template<class C>Comp(C real, C imaginary = 0) { x = real; y = imaginary; }
 	Comp(const D2D1_SIZE_F&rhs) { y = rhs.height; x = rhs.width; }
 	Comp(const D2D1_POINT_2F&rhs) { y = rhs.y; x = rhs.x; }
-	Comp operator()(T real, T imaginary = 0) { x = real; y = imaginary; return*this; }
-	Comp operator=(const Comp&rhs) { x = rhs.x; y = rhs.y; return *this; }
-	Comp operator*=(const Comp&rhs) {
+	Comp&operator()(T real, T imaginary = 0) { x = real; y = imaginary; return*this; }
+	Comp&operator=(const Comp&rhs) { x = rhs.x; y = rhs.y; return *this; }
+	Comp&operator*=(const Comp&rhs) {
 		T bPart = x * rhs.x - y * rhs.y;
 		y = y * rhs.x + x * rhs.y;
 		x = bPart;
@@ -24,20 +24,28 @@ public:
 		buffer *= rhs;
 		return buffer;
 	}
-	Comp operator+=(const Comp&rhs) { x += rhs.x; y += rhs.y; return*this; }
+	Comp&operator+=(const Comp&rhs) { x += rhs.x; y += rhs.y; return*this; }
 	Comp operator+(const Comp&rhs) const{ Comp buffer(x, y); buffer += rhs; return buffer; }
-	Comp operator/=(const Comp&rhs) {
-		T bPart = x / rhs.x - y / rhs.y;
-		y = y / rhs.x + x / rhs.y;
-		x = bPart;
-		return*this;
+	Comp&operator/=(const Comp&rhs) {//(ai-b)/(c+di)/i=(e+fi)
+		if (rhs.x&&rhs.y) {
+			auto a = x, b = y, c = rhs.x, d = rhs.y;
+			auto div = c * c + d * d;
+			x = a * c + b * d;
+			x /= div;
+			y = c * b - d * a;
+			y /= div;
+		}
+		else if (rhs.x) { auto C = *this; C.x = x / rhs.x; C.y = y / rhs.x; }
+		else if (rhs.y) { auto C = *this; C.x = +y / rhs.y; C.y = -x / rhs.y; }
+		else { x = NAN; y = NAN; }//division by 0
+		return *this;
 	}
 	Comp operator/(const Comp&rhs) const{ Comp buffer(x, y); buffer /= rhs; return buffer; }
-	Comp operator-=(const Comp&rhs) { x -= rhs.x; y -= rhs.y; return*this; }
+	Comp&operator-=(const Comp&rhs) { x -= rhs.x; y -= rhs.y; return*this; }
 	Comp operator-(const Comp&rhs) const{ Comp buffer(x, y); buffer -= rhs; return buffer; }
-	Comp operator*=(const T&rhs) { x *= rhs; y *= rhs; return*this; }
+	Comp&operator*=(const T&rhs) { x *= rhs; y *= rhs; return*this; }
 	Comp operator*(const T&rhs) const{ Comp buffer(x, y); buffer *= rhs; return buffer; }
-	Comp operator/=(const T&rhs) { x /= rhs; y /= rhs; return*this; }
+	Comp&operator/=(const T&rhs) { x /= rhs; y /= rhs; return*this; }
 	Comp operator/(const T&rhs) const{ Comp buffer(x, y); buffer /= rhs; return buffer; }
 
 	bool operator==(const Comp&rhs) const{ if (x == rhs.x&&y == rhs.y)return 1; return 0; }
@@ -59,11 +67,11 @@ public:
 	D2D1_POINT_2F get() const{ return{ (float)x,(float)y }; }
 	D2D1_SIZE_F getS() const { return{ (float)x,(float)y }; }
 };
-template<class T>Comp<T> CCompbyA(T distance, float Angel){
+template<class T>constexpr Comp<T> CCompbyA(T distance, float Angel){
 	Comp<T>buffer(cos(Angel*PI/180.0)*distance, sin(Angel*PI/180.0)*distance);
 	return buffer;
 }
-template<class T>Comp<T> CCompbyR(T distance, float Radian) {//e^xi=cos(x)+isin(x)
+template<class T>constexpr Comp<T> CCompbyR(T distance, float Radian) {//e^xi=cos(x)+isin(x)
 	Comp<T>buffer(cos(Radian)*distance, sin(Radian)*distance);
 	return buffer;
 }
