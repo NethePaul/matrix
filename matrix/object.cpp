@@ -272,22 +272,24 @@ void Object::AI()
 {
 	if (controlled)return;
 	for (auto&wt : target) {
-		auto t = wt.lock(); if (t&&!(t->health<=0)) {
+		auto t = wt.lock(); if (t) {
 			auto m = t->pos-pos;
-			if (mov.getD())
-				m /= mov;
-			else
-				m /= CCompbyR(1,rotation);
-			if (m.getD() < (get_outer_radius() + t->get_outer_radius())*1.1)m*CCompbyA(1,1);
-			auto angle=m.getA()/PI*2;
-			angle = pow(angle, 3);
+			double angle=m.getA();
+			angle -= rotation + rotation_speed;
+			angle = std::remainder(angle, PI*2);
+			if (max_rotation_acc > abs(angle))
+				angle /= max_rotation_acc;
+			else if (angle < 0)angle = -1;
+			else angle = 1;
+			
 			set_rotation_acc(angle *100);
 			set_acc(100);
-			shoot();
+			if(!(t->health<=0))shoot();
 			return;
 		}
 	}
 	set_mov(0);
+	set_acc(0);
 }
 
 void Object::set_rotation_acc(double percantage)

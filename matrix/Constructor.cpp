@@ -18,7 +18,7 @@ void Constructor::set_selected_last()
 	if (sl)
 		menu=sl->details(main, f, zoom, 1000, HEIGHT / 2.0, 600, HEIGHT / 3.0, working_on->pos);
 }
-Constructor::Constructor(HWND main, ID2D1Factory*f,D2D1::Matrix3x2F&last, D2D1::Matrix3x2F&zoom, Game * context):context(context),working_on_(0),last(last),zoom(zoom),main(main),f(f)
+Constructor::Constructor(HWND main, ID2D1Factory*f,D2D1::Matrix3x2F&last, D2D1::Matrix3x2F&zoom, Game * context):working_on(0),context(context),working_on_(0),last(last),zoom(zoom),main(main),f(f)
 {
 	//last.Invert();
 	//auto min = last.TransformPoint(D2D1::Point2F(0, 0));
