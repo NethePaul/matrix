@@ -2,6 +2,7 @@
 #include"Ship.h"
 class Game;
 class Scrollable;
+class Scrollbar;
 class Constructor
 {
 	std::vector<std::shared_ptr<Object>>components_selectable;
@@ -11,6 +12,8 @@ class Constructor
 	std::weak_ptr<Object>constructee_selected;
 	std::shared_ptr<Object>working_on_;//ensures working_on will not be deallocated
 	Scrollable*menu=0;
+	Scrollbar*components_selection=0;
+	double components_selection_scroll_state = 0;
 	D2D1_SIZE_F m_size;
 	Ship*working_on;
 	Game*context;

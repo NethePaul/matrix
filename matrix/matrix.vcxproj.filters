@@ -80,6 +80,9 @@
     <ClCompile Include="Scrollable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Scrollbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cbasewin.h">
@@ -149,6 +152,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scrollable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scrollbar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,6 +4,7 @@
 #include"jet.h"
 #include"matrix.h"
 #include"Scrollable.h"
+#include"Scrollbar.h"
 
 Comp<double> get_cp2(D2D1::Matrix3x2F&m, POINT&cp) {
 	auto pos = m.TransformPoint(D2D1::Point2F(cp.x, cp.y));
@@ -17,6 +18,7 @@ void Constructor::set_selected_last()
 	auto sl = selected_last.lock();
 	if (sl)
 		menu=sl->details(main, f, zoom, 1000, HEIGHT / 2.0, 600, HEIGHT / 3.0, working_on->pos);
+	else menu = 0;
 }
 Constructor::Constructor(HWND main, ID2D1Factory*f,D2D1::Matrix3x2F&last, D2D1::Matrix3x2F&zoom, Game * context):working_on(0),context(context),working_on_(0),last(last),zoom(zoom),main(main),f(f)
 {
@@ -35,6 +37,11 @@ Constructor::Constructor(HWND main, ID2D1Factory*f,D2D1::Matrix3x2F&last, D2D1::
 	}
 	if (context)valid = set_working_on(context->get_controlled().lock());
 	constructee_selected = working_on_;
+	auto p = zoom.TransformPoint({ 1500.0,50.0 });
+	auto p2 = zoom.TransformPoint({ 1550.0,HEIGHT/2-50 });
+	auto d = D2D1::Point2F(p2.x - p.x, p2.y - p.y);
+	this->components_selection = new Scrollbar(main, f, p.x, p.y, d.x, d.y, d.y);
+	this->components_selection->on_update = [this](double d) {this->components_selection_scroll_state = d; };
 }
 
 Constructor::~Constructor()
@@ -46,6 +53,8 @@ Constructor::~Constructor()
 	if (working_on)working_on->controlled = true;
 	if (menu)
 		DestroyWindow(menu->get_hwnd());
+	if (this->components_selection)
+		DestroyWindow(this->components_selection->get_hwnd());
 }
 
 bool Constructor::set_working_on(std::shared_ptr<Object> obj)
@@ -80,6 +89,15 @@ void Constructor::draw(ID2D1RenderTarget *r)
 
 void Constructor::draw_selection(ID2D1RenderTarget *r)
 {
+	auto&scroll = this->components_selection_scroll_state;
+	auto inner_dy = 50.0 * this->components_selectable.size();
+	auto outer_dy = HEIGHT / 2 - 100;
+	auto ddy = inner_dy - outer_dy;
+	auto min_y = 100+ddy*scroll;
+	auto max_y = min_y+outer_dy;
+	int min_i= std::lround(min_y / 50 - 2);
+	int max_i = std::lround(max_y / 50 - 2);
+	
 	last_inverted = last;
 	last_inverted.Invert();
 	auto min = last_inverted.TransformPoint(D2D1::Point2F(0, 0));
@@ -88,8 +106,10 @@ void Constructor::draw_selection(ID2D1RenderTarget *r)
 	r->SetTransform(a);
 	selectable_inverted = a;
 	selectable_inverted.Invert();
-	for (auto&p : components_selectable) {
-		p->draw_full(r, gis.Yellow);
+	for (int i = min_i; i < max_i&&i<this->components_selectable.size();i++) {
+		this->components_selectable[i]->pos.y -= min_y-100;
+		this->components_selectable[i]->draw_full(r, gis.Yellow);
+		this->components_selectable[i]->pos.y += min_y-100;
 	}
 	r->SetTransform(last);
 }
@@ -113,8 +133,6 @@ void Constructor::input(UINT msg, POINT cp, WPARAM wParam, LPARAM lParam, int sc
 					o->controlled = true;
 					constructee_selected = o;
 				}
-				else
-					selected_l = o;
 			}
 		}
 		if (k(VK_BACK) && player&&player != working_on_&&working_on) {
@@ -167,6 +185,19 @@ void Constructor::input(UINT msg, POINT cp, WPARAM wParam, LPARAM lParam, int sc
 			SetCapture(main);
 			update_closest();
 			if(mouse_in_working_area) selected_r = closest;
+			else {//remove component from list
+				auto c = closest.lock();
+				int i =std::lround(c->pos.y / 50 - 2);
+				this->components_selectable.erase(this->components_selectable.begin() + i);
+				for (int j = i; j < this->components_selectable.size(); j++) {
+					this->components_selectable[j]->pos.y -= 50;
+				}
+				auto p = zoom.TransformPoint({ FLOAT(.0),FLOAT(100.0) });
+				auto p2 = zoom.TransformPoint({FLOAT(.0),FLOAT(100.0 + 50.0 * this->components_selectable.size())});
+				auto d = p2.y - p.y;
+				if (this->components_selection)this->components_selection->set_inner_h(d);
+
+			}
 		}
 		break;
 	case WM_RBUTTONUP:
@@ -185,6 +216,23 @@ void Constructor::input(UINT msg, POINT cp, WPARAM wParam, LPARAM lParam, int sc
 		update_closest();
 		if (selected_l)selected_l->set_pos(get_cp2(last_inverted, cp));
 		break;
+	case WM_KEYUP:
+		switch (wParam) {
+		case VK_KEY_C:
+			auto sl = selected_last.lock();
+			if (sl) {
+				auto s = std::shared_ptr<Object>(sl->clone());
+				this->components_selectable.push_back(s);
+				s->pos = Comp<double>(1300, 100 + 50 * ((int)this->components_selectable.size()-1));
+				auto p = zoom.TransformPoint({ (FLOAT).0,(FLOAT)100.0 });
+				auto p2 = zoom.TransformPoint({ (FLOAT).0,FLOAT(100.0 + 50.0 * this->components_selectable.size()) });
+				auto d = p2.y - p.y;
+				if (this->components_selection)this->components_selection->set_inner_h(d);
+				s->highlight(false, 0);
+				s->controlled = 0;
+			}
+			break;
+		}break;
 	default:
 		break;
 	}
@@ -199,6 +247,12 @@ void Constructor::update_closest()
 	if (!c)p = get_cp2(last_inverted, cp);
 	std::shared_ptr<Object>o;
 	if (c) {
+		auto&scroll = this->components_selection_scroll_state;
+		auto inner_dy = 50.0 * this->components_selectable.size();
+		auto outer_dy = HEIGHT / 2 - 100;
+		auto ddy = inner_dy - outer_dy;
+		auto min_y = ddy * scroll;
+		p.y += min_y;
 		for (auto&obj : this->components_selectable) {
 			auto d2 = (obj->pos - p).getD();
 			if (d2 < d) {

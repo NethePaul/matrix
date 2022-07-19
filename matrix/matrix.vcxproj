@@ -168,6 +168,7 @@
     <ClCompile Include="Message.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="Scrollable.cpp" />
+    <ClCompile Include="Scrollbar.cpp" />
     <ClCompile Include="Ship.cpp" />
     <ClCompile Include="slider.cpp" />
     <ClCompile Include="Stars.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="Message.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="Scrollable.h" />
+    <ClInclude Include="Scrollbar.h" />
     <ClInclude Include="Ship.h" />
     <ClInclude Include="slider.h" />
     <ClInclude Include="Stars.h" />
